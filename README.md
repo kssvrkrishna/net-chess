@@ -8,7 +8,7 @@ If time permits, we also plan to create a player vs computer chess game using a 
 ### Basic requirements
 1. A TUI that shows chess board (or some representation that resembles chess board.) over network for both the players.
 2. A player should be able to enter chess moves and the board should be updated after every move. (Here we are assuming that the player gives only valid moves.)
-3. Each player will have timer that shows his available time.
+3. Each player will have timer that shows their available time.
 
 ### Extra requirements
 1. Ability to determine if a move is legal or not. 
