@@ -23,9 +23,8 @@ If time permits, we also plan to create a player vs computer chess game using a 
 ### What is the architecture of your application (the key components)?
 - Our MVP which is to build a two player game in a single instance has the following components: 
     - The primary game logic resides in the Chess.hs file: 
-        - The logic in Chess.hs file will check if a move is valid
-        a. The piece at from position is of required color.
-        b. There is no piece at to position or piece at to position is of opposite color.
+        - The logic in Chess.hs file will check if a move is valid:
+          </br>The piece at from_position is of required color. Also, there is no piece at to_position or piece at to_position is of opposite color.
         - Generate updated state of the board after each move.
     - User Prompt: 
         - from_position and to_position will be specified by the user when it's their turn to make a move.
