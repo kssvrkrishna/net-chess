@@ -1,11 +1,3 @@
-module Main where
-import qualified MyLib (someFunc)
-import HaskellSay (haskellSay)
-import Brick
-import Network.Socket
+module Main (main) where
 
-main :: IO ()
-main = do
-  putStrLn "Hello, Haskell!"
-  haskellSay "Hello, Haskell! You're using a function from another package!"
-  MyLib.someFunc
+import UI (main)
