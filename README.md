@@ -44,7 +44,7 @@ If time permits, we also plan to create a player vs computer chess game using a 
 ### If not, how will you modify your goals?
 - If we do not have enough time to implement the networked part, 
 we will alternatively change the turn of the user in the TUI by enforcing the following constraint:
-    - Only a white piece can be moved when it is white team's team and vice versa.
+    - Only a white piece can be moved when it is white team's turn and vice versa.
 
 
 
