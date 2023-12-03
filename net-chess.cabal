@@ -69,7 +69,13 @@ library
         base ^>=4.19.0.0,
         haskell-say ^>=1.0.0.0,
         brick,
-        network
+        network,
+        microlens,
+        microlens-mtl,
+        microlens-th,
+        vty,
+        vector,
+        split
 
     -- Directories containing source files.
     hs-source-dirs:   src
@@ -96,7 +102,13 @@ executable net-chess
         net-chess,
         haskell-say ^>=1.0.0.0,
         brick,
-        network
+        network,
+        microlens,
+        microlens-mtl,
+        microlens-th,
+        vty,
+        vector,
+        split
 
     -- Directories containing source files.
     hs-source-dirs:   app
@@ -132,4 +144,10 @@ test-suite net-chess-test
         net-chess,
         haskell-say ^>=1.0.0.0,
         brick,
-        network
+        network,
+        microlens,
+        microlens-mtl,
+        microlens-th,
+        vty,
+        vector,
+        split

@@ -4,25 +4,24 @@ module UI where
 
 import Brick
 import qualified Graphics.Vty as Vty
-import Chess
-
-data CounterState = CounterState { count :: Int }
+import Game
 
 app :: App CounterState () ()
 app = App
-  { appDraw = \s -> [str ("Count: " ++ show (count s))]
+  { appDraw = \s -> [str ("Count: " ++ show (count s) ++ " Count1: " ++ show (count1 s))]
   , appChooseCursor = neverShowCursor
   , appHandleEvent = handleEvent
   , appStartEvent = return ()
   , appAttrMap = const $ attrMap Vty.defAttr []
   }
 
-handleEvent :: CounterState -> BrickEvent () () -> EventM () CounterState ()
-handleEvent s (VtyEvent (Vty.EvKey Vty.KUp [])) =
-  modify $ s { count = count s + 1 } -- Increment count on 'Up' arrow press
-handleEvent s (VtyEvent (Vty.EvKey (Vty.KChar 'q') [])) =
-  halt -- Halt application on 'q' key press
-handleEvent s _ = return () -- Continue application for other events
+handleEvent :: BrickEvent () e -> EventM () CounterState ()
+handleEvent (VtyEvent (Vty.EvKey Vty.KUp [])) = modify $ increment
+handleEvent (VtyEvent (Vty.EvKey (Vty.KChar 'q') [])) = halt
+handleEvent _ = return () 
+
+increment :: CounterState -> CounterState
+increment s = s { count = count s + 1, count1 s + 1 }
 
 main :: IO ()
 main = do
