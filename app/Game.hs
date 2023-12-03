@@ -8,18 +8,20 @@ data CounterState = CounterState { count :: Int, count1 :: Int } deriving (Read,
 data CounterState1 = CounterState1 { count_dec :: Int, count_dec1 :: Int } deriving (Read, Show)
 
 data Color = Black | White deriving (Eq, Show, Read)
+type Position = (Char, Int)
 
-data Square = Square { position :: (Char, Int), piece :: Maybe Piece } deriving (Show)
+data Square = Square {position :: Position, piece :: Maybe Piece } deriving (Show, Read)
 type Chessboard = [Square]
 
-data PieceType = King | Queen | Rook | Knight | Bishop | Pawn deriving (Eq, Show)
-data Piece = Piece PieceType Color deriving (Eq, Show)
+data PieceType = King | Queen | Rook | Knight | Bishop | Pawn deriving (Eq, Show, Read)
+data Piece = Piece PieceType Color deriving (Eq, Show, Read)
 
-getColor :: Piece PieceType Color -> Color
+getColor :: Piece -> Color
 getColor (Piece _ color) = color
 
+
 -- Defined this way to comply with the algebraic notation of chess moves.
-data Move = Move {Piece, toPosition :: Position, isCapture :: Bool} deriving (Eq, Show) 
+data Move = Move {movePiece :: Piece, toPosition :: Position, isCapture :: Bool} deriving (Eq, Show) 
 
 data Game = Game
   { cursor :: (Int, Int)
@@ -27,7 +29,7 @@ data Game = Game
   , counterState :: CounterState
   , counterState1 :: CounterState1
   , currentPlayerTurn :: Color
-  , board :: Chessboard,
+  , board :: Chessboard
   } deriving (Read, Show)
 
 increment :: Game -> Game
@@ -53,8 +55,8 @@ opponent Black = White
 togglePlayerTurn :: Game -> Game
 togglePlayerTurn game = game { currentPlayerTurn = opponent (currentPlayerTurn game) }
 
-initialChessboard :: Chessboard
-initialChessboard =
+initialChessBoard :: Chessboard
+initialChessBoard =
   [ Square ('a', 1) (Just (Piece Rook   White))
   , Square ('b', 1) (Just (Piece Knight White))
   , Square ('c', 1) (Just (Piece Bishop White))

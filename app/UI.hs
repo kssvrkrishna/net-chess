@@ -5,10 +5,67 @@ module UI where
 import Brick
 import qualified Graphics.Vty as Vty
 import Game
+import qualified Data.Char as Char
+import Data.List.Split (chunksOf)
+import Data.List (intersperse)
+import Data.List (sortBy)
+import Data.Function (on)
+import Brick.Widgets.Border.Style (unicode, unicodeBold)
+import Brick.Widgets.Border (border, borderWithLabel, hBorderWithLabel, vBorder)
+import Lens.Micro
+
+drawChessboard :: Chessboard -> [Widget ()]
+drawChessboard board =
+  let renderSquare (Square _ piece) =
+        case piece of
+          Nothing -> str "   "  -- Empty square, three spaces
+          Just (Piece pieceType color) ->
+            let pieceSymbol =
+                  case (pieceType, color) of
+                    (Pawn, White) -> "♙"
+                    (Rook, White) -> "♖"
+                    (Knight, White) -> "♘"
+                    (Bishop, White) -> "♗"
+                    (Queen, White) -> "♕"
+                    (King, White) -> "♔"
+                    (Pawn, Black) -> "♟"
+                    (Rook, Black) -> "♜"
+                    (Knight, Black) -> "♞"
+                    (Bishop, Black) -> "♝"
+                    (Queen, Black) -> "♛"
+                    (King, Black) -> "♚"
+            in str (" " ++ pieceSymbol ++ " ")  -- Padding spaces around the piece
+
+      renderRow :: [Square] -> Widget ()
+      renderRow row = hBox $ intersperse (str "│") (map renderSquare row)
+
+      -- Convert each row to a Widget, separating rows by horizontal lines
+      rearrangedRows = reverse $ chunksOf 8 board  -- Reverse the rows
+      renderedRows = map renderRow rearrangedRows
+      horizontalLine = hBox (replicate 8 (str "───"))  -- Horizontal line for separation
+
+  in [vBox (intersperse (str "\n") (horizontalLine : renderedRows))]  -- Separate rows with newline
+
+drawHelp :: Color -> Widget ()
+drawHelp color =
+  [ "Move: Algebraic notation"
+  , "Player turn: " ++ show(color)
+  , "Quit: Q key"
+  ]
+  & unlines
+  & str
+  & padLeftRight 1
+  & borderWithLabel (str " Help ")
+  & withBorderStyle unicodeBold
+  & setAvailableSize (31, 12)
+
+drawUI :: Game -> Widget ()
+drawUI game =
+  vBox [drawHelp (currentPlayerTurn game), vBox (drawChessboard (board game))]
 
 app :: App Game () ()
 app = App
-  { appDraw = \s -> [str ("Current player turn: " ++ show(currentPlayerTurn s) ++ " Count: " ++ show (count (counterState s)) ++ " Count1: " ++ show (count1 (counterState s)) ++ "Count_dec: " ++ show (count_dec (counterState1 s)) ++ " Count_dec1: " ++ show (count_dec1 (counterState1 s)))]
+  { appDraw = \s -> [drawUI s] -- drawChessboard (board s)
   , appChooseCursor = neverShowCursor
   , appHandleEvent = handleEvent
   , appStartEvent = return ()
