@@ -8,7 +8,7 @@ import Game
 
 app :: App Game () ()
 app = App
-  { appDraw = \s -> [str ("Count: " ++ show (count (counterState s)) ++ " Count1: " ++ show (count1 (counterState s)) ++ "Count_dec: " ++ show (count_dec (counterState1 s)) ++ " Count_dec1: " ++ show (count_dec1 (counterState1 s)))]
+  { appDraw = \s -> [str ("Current player turn: " ++ show(currentPlayerTurn s) ++ " Count: " ++ show (count (counterState s)) ++ " Count1: " ++ show (count1 (counterState s)) ++ "Count_dec: " ++ show (count_dec (counterState1 s)) ++ " Count_dec1: " ++ show (count_dec1 (counterState1 s)))]
   , appChooseCursor = neverShowCursor
   , appHandleEvent = handleEvent
   , appStartEvent = return ()
@@ -23,6 +23,6 @@ handleEvent _ = return ()
 
 main :: IO ()
 main = do
-  let initialState = Game {counterState = CounterState { count = 0, count1 = 10 }, counterState1 = CounterState1 { count_dec = 0, count_dec1 = 10 }}
+  let initialState = Game {currentPlayerTurn = White, counterState = CounterState { count = 0, count1 = 10 }, counterState1 = CounterState1 { count_dec = 0, count_dec1 = 10 }}
   _ <- defaultMain app initialState
   return ()
