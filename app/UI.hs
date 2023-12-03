@@ -21,10 +21,10 @@ handleEvent (VtyEvent (Vty.EvKey (Vty.KChar 'q') [])) = halt
 handleEvent _ = return () 
 
 increment :: CounterState -> CounterState
-increment s = s { count = count s + 1, count1 s + 1 }
+increment s = s { count = count s + 1, count1 = count1 s + 1 }
 
 main :: IO ()
 main = do
-  let initialState = CounterState { count = 0 }
+  let initialState = CounterState { count = 0, count1 = 10 }
   _ <- defaultMain app initialState
   return ()
