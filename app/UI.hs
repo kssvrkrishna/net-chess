@@ -13,6 +13,7 @@ import Data.Function (on)
 import Brick.Widgets.Border.Style (unicode, unicodeBold)
 import Brick.Widgets.Border (border, borderWithLabel, hBorderWithLabel, vBorder)
 import Lens.Micro
+import qualified Data.Text as T
 
 drawChessboard :: Chessboard -> [Widget ()]
 drawChessboard board =
@@ -46,10 +47,10 @@ drawChessboard board =
 
   in [vBox (intersperse (str "\n") (horizontalLine : renderedRows))]  -- Separate rows with newline
 
-drawHelp :: Color -> Widget ()
-drawHelp color =
+drawHelp :: CounterState -> Widget ()
+drawHelp counterState =
   [ "Move: Algebraic notation"
-  , "Player turn: " ++ show(color)
+  , "Player turn: " ++ show(count counterState)
   , "Quit: Q key"
   ]
   & unlines
@@ -61,7 +62,7 @@ drawHelp color =
 
 drawUI :: Game -> Widget ()
 drawUI game =
-  vBox [drawHelp (currentPlayerTurn game), vBox (drawChessboard (board game))]
+  vBox [drawHelp (counterState game), vBox (drawChessboard (board game))]
 
 app :: App Game () ()
 app = App
@@ -76,10 +77,19 @@ handleEvent :: BrickEvent () e -> EventM () Game ()
 handleEvent (VtyEvent (Vty.EvKey Vty.KUp [])) = modify $ increment
 handleEvent (VtyEvent (Vty.EvKey Vty.KDown [])) = modify $ decrement
 handleEvent (VtyEvent (Vty.EvKey (Vty.KChar 'q') [])) = halt
+handleEvent (VtyEvent (Vty.EvKey (Vty.KChar c) [])) = do
+  modify $ \s -> s { inputChars = T.snoc (inputChars s) c } -- Append the pressed key to inputChars
+  input <- gets inputChars -- Retrieve the current input
+  case T.length input of
+    3 -> modify $ increment
+    4 -> modify $ decrement
+    _ -> return ()
 handleEvent _ = return () 
+
+
 
 main :: IO ()
 main = do
-  let initialState = Game {board = initialChessBoard, currentPlayerTurn = White, counterState = CounterState { count = 0, count1 = 10 }, counterState1 = CounterState1 { count_dec = 0, count_dec1 = 10 }}
+  let initialState = Game {inputChars = T.empty, board = initialChessBoard, currentPlayerTurn = White, counterState = CounterState { count = 0, count1 = 10 }, counterState1 = CounterState1 { count_dec = 0, count_dec1 = 10 }}
   _ <- defaultMain app initialState
   return ()

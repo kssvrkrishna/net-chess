@@ -75,7 +75,8 @@ library
         microlens-th,
         vty,
         vector,
-        split
+        split,
+        text
 
     -- Directories containing source files.
     hs-source-dirs:   src
@@ -108,7 +109,8 @@ executable net-chess
         microlens-th,
         vty,
         vector,
-        split
+        split,
+        text
 
     -- Directories containing source files.
     hs-source-dirs:   app
@@ -150,4 +152,5 @@ test-suite net-chess-test
         microlens-th,
         vty,
         vector,
-        split
+        split,
+        text

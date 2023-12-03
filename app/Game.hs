@@ -3,6 +3,7 @@ import Data.Function ((&))
 import Data.List (nub)
 import Data.List.Split (chunksOf)
 import Lens.Micro (ix, (%~))
+import qualified Data.Text as T
 
 data CounterState = CounterState { count :: Int, count1 :: Int } deriving (Read, Show)
 data CounterState1 = CounterState1 { count_dec :: Int, count_dec1 :: Int } deriving (Read, Show)
@@ -19,7 +20,6 @@ data Piece = Piece PieceType Color deriving (Eq, Show, Read)
 getColor :: Piece -> Color
 getColor (Piece _ color) = color
 
-
 -- Defined this way to comply with the algebraic notation of chess moves.
 data Move = Move {movePiece :: Piece, toPosition :: Position, isCapture :: Bool} deriving (Eq, Show) 
 
@@ -30,6 +30,7 @@ data Game = Game
   , counterState1 :: CounterState1
   , currentPlayerTurn :: Color
   , board :: Chessboard
+  , inputChars :: T.Text
   } deriving (Read, Show)
 
 increment :: Game -> Game
@@ -38,15 +39,15 @@ increment game =
                                                , count1 = count1 (counterState game) + 1
                                                }
       updatedGame = game { counterState = updatedCounterState }
-  in togglePlayerTurn updatedGame
+  in togglePlayerTurn (updatedGame { inputChars = T.empty })
 
 decrement :: Game -> Game
 decrement game =
-  let updatedCounterState = (counterState1 game) { count_dec = count_dec (counterState1 game) - 1
-                                               , count_dec1 = count_dec1 (counterState1 game) - 1
+  let updatedCounterState = (counterState game) { count = count (counterState game) - 1
+                                               , count1 = count1 (counterState game) - 1
                                                }
-      updatedGame = game { counterState1 = updatedCounterState }
-  in togglePlayerTurn updatedGame
+      updatedGame = game { counterState = updatedCounterState }
+  in togglePlayerTurn (updatedGame { inputChars = T.empty })
 
 opponent :: Color -> Color
 opponent White = Black
