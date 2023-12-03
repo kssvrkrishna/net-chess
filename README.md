@@ -45,6 +45,28 @@ If time permits, we also plan to create a player vs computer chess game using a 
 we will alternatively change the turn of the user in the TUI by enforcing the following constraint:
     - Only a white piece can be moved when it is white team's turn and vice versa.
 
+## Instructions: 
+
+### Installation:
+
+- #### GHC and cabal:
+    ```
+    brew install ghc.
+    ```
+
+- #### Steps to install brick libary:
+    ```
+    Git clone https://github.com/jtdaugherty/brick.git
+    cd brick
+    cabal new-build
+    ```
+
+### Build and run project:
+```
+cabal clean
+cabal build 
+cabal run net-chess --ghc-options="-threaded"
+```
 
 
 

@@ -21,12 +21,6 @@ handleEvent (VtyEvent (Vty.EvKey Vty.KDown [])) = modify $ decrement
 handleEvent (VtyEvent (Vty.EvKey (Vty.KChar 'q') [])) = halt
 handleEvent _ = return () 
 
-increment :: Game -> Game
-increment s = s { counterState = CounterState { count = count (counterState s) + 1, count1 = count1 (counterState s) + 1 } }
-
-decrement :: Game -> Game
-decrement s = s { counterState1 = CounterState1 { count_dec = count_dec (counterState1 s) - 1, count_dec1 = count_dec1 (counterState1 s) - 1 } }
-
 main :: IO ()
 main = do
   let initialState = Game {counterState = CounterState { count = 0, count1 = 10 }, counterState1 = CounterState1 { count_dec = 0, count_dec1 = 10 }}
