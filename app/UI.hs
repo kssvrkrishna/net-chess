@@ -77,16 +77,19 @@ handleEvent :: BrickEvent () e -> EventM () Game ()
 handleEvent (VtyEvent (Vty.EvKey Vty.KUp [])) = modify $ increment
 handleEvent (VtyEvent (Vty.EvKey Vty.KDown [])) = modify $ decrement
 handleEvent (VtyEvent (Vty.EvKey (Vty.KChar 'q') [])) = halt
+handleEvent (VtyEvent (Vty.EvKey Vty.KEnter [])) = do
+  input <- gets inputChars
+  if T.length input == 3  -- Check if input is in algebraic notation format
+    then modify $ decrement
+  else if T.length input == 4  -- Check if input is in algebraic notation format
+    then modify $ increment
+  else do
+    modify $ \s -> s { inputChars = T.empty }
+    return ()  -- Invalid input length, do nothing
 handleEvent (VtyEvent (Vty.EvKey (Vty.KChar c) [])) = do
   modify $ \s -> s { inputChars = T.snoc (inputChars s) c } -- Append the pressed key to inputChars
-  input <- gets inputChars -- Retrieve the current input
-  case T.length input of
-    3 -> modify $ increment
-    4 -> modify $ decrement
-    _ -> return ()
-handleEvent _ = return () 
-
-
+  return ()
+handleEvent _ = return ()
 
 main :: IO ()
 main = do
