@@ -6,25 +6,29 @@ import Brick
 import qualified Graphics.Vty as Vty
 import Game
 
-app :: App CounterState () ()
+app :: App Game () ()
 app = App
-  { appDraw = \s -> [str ("Count: " ++ show (count s) ++ " Count1: " ++ show (count1 s))]
+  { appDraw = \s -> [str ("Count: " ++ show (count (counterState s)) ++ " Count1: " ++ show (count1 (counterState s)) ++ "Count_dec: " ++ show (count_dec (counterState1 s)) ++ " Count_dec1: " ++ show (count_dec1 (counterState1 s)))]
   , appChooseCursor = neverShowCursor
   , appHandleEvent = handleEvent
   , appStartEvent = return ()
   , appAttrMap = const $ attrMap Vty.defAttr []
   }
 
-handleEvent :: BrickEvent () e -> EventM () CounterState ()
+handleEvent :: BrickEvent () e -> EventM () Game ()
 handleEvent (VtyEvent (Vty.EvKey Vty.KUp [])) = modify $ increment
+handleEvent (VtyEvent (Vty.EvKey Vty.KDown [])) = modify $ decrement
 handleEvent (VtyEvent (Vty.EvKey (Vty.KChar 'q') [])) = halt
 handleEvent _ = return () 
 
-increment :: CounterState -> CounterState
-increment s = s { count = count s + 1, count1 = count1 s + 1 }
+increment :: Game -> Game
+increment s = s { counterState = CounterState { count = count (counterState s) + 1, count1 = count1 (counterState s) + 1 } }
+
+decrement :: Game -> Game
+decrement s = s { counterState1 = CounterState1 { count_dec = count_dec (counterState1 s) - 1, count_dec1 = count_dec1 (counterState1 s) - 1 } }
 
 main :: IO ()
 main = do
-  let initialState = CounterState { count = 0, count1 = 10 }
+  let initialState = Game {counterState = CounterState { count = 0, count1 = 10 }, counterState1 = CounterState1 { count_dec = 0, count_dec1 = 10 }}
   _ <- defaultMain app initialState
   return ()
