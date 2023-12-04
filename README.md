@@ -35,7 +35,7 @@ If time permits, we also plan to create a player vs computer chess game using a 
 ### What challenges (if any) did you have so far and how did you solve them?
 - We are yet to implement keeping track of who's turn (white or black) it is to make the move and we will take help from the state transformers concepts taught in class.
 - Since we are new to using the brick library, we are still trying to figure out how to build a TUI visualization of the chess board state using brick. We are planning to take reference from the sudoku implementation example on brick's github repo to understand how to build a 8x8 square.
-- We need to find a way to visualize the chess pieces in the TUI. We are yet to verify if our idea of using unicode characters work with the brick library. A simple fall-back option is to use small and capital letters to represent the chess pieces, for eg: p represents white Pawn and P represents black Pawn.
+- We need to find a way to visualize the chess pieces in the TUI. We are yet to verify if our idea of using unicode characters works with the brick library. A simple fall-back option is to use small and capital letters to represent the chess pieces, for eg: k represents black king and K represents white king.
 
 ### Do you expect to meet your goals until the deadline?
 - We are not sure if we will have time to implement the networked part of the two-player application. 
