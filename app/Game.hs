@@ -14,6 +14,7 @@ type Position = (Char, Int)
 data Square = Square {position :: Position, piece :: Maybe Piece } deriving (Show, Read)
 type Chessboard = [Square]
 
+-- K for king, Q for queen, R for rook, B for bishop, and N for knight
 data PieceType = King | Queen | Rook | Knight | Bishop | Pawn deriving (Eq, Show, Read)
 data Piece = Piece PieceType Color deriving (Eq, Show, Read)
 
@@ -39,7 +40,7 @@ increment game =
                                                , count1 = count1 (counterState game) + 1
                                                }
       updatedGame = game { counterState = updatedCounterState }
-  in togglePlayerTurn (updatedGame { inputChars = T.empty })
+  in togglePlayerTurn (updatedGame {previous = Just game, inputChars = T.empty })
 
 decrement :: Game -> Game
 decrement game =
@@ -47,7 +48,16 @@ decrement game =
                                                , count1 = count1 (counterState game) - 1
                                                }
       updatedGame = game { counterState = updatedCounterState }
-  in togglePlayerTurn (updatedGame { inputChars = T.empty })
+  in togglePlayerTurn (updatedGame {previous = Just game, inputChars = T.empty })
+
+move :: Game -> Game
+move game = game
+
+captureMove :: Game -> Game
+captureMove game = game
+
+pawnMove :: Game -> Game
+pawnMove game = game
 
 opponent :: Color -> Color
 opponent White = Black
