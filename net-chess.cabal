@@ -66,7 +66,7 @@ library
 
     -- Other library packages from which modules are imported.
     build-depends:
-        base ^>=4.19.0.0,
+        base ^>=4.17.0.0,
         haskell-say ^>=1.0.0.0,
         brick,
         network,
