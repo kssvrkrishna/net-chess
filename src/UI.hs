@@ -61,9 +61,22 @@ drawHelp game =
   & withBorderStyle unicodeBold
   & setAvailableSize (31, 12)  -- Increased the available size of the help box
 
+drawInputChars :: Game -> Widget ()
+drawInputChars game =
+  let input = T.unpack (inputChars game)
+      horizontalLine = hBox (replicate 8 (str "───")) -- Define the horizontal line
+      minWidth = 60  -- Set the minimum width
+  in vBox [ horizontalLine  -- Add the horizontal line above the widget
+          , str ("Input: " ++ input)
+            & padLeftRight 5
+            & hLimit minWidth
+            & borderWithLabel (str " Current Input ")
+            & withBorderStyle unicodeBold
+          ]
+
 drawUI :: Game -> Widget ()
 drawUI game =
-  vBox [drawHelp (game), vBox (drawChessboard (board game))]
+  vBox [drawHelp (game), vBox (drawChessboard (board game)), drawInputChars game]
 
 app :: App Game () ()
 app = App
