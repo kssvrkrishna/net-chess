@@ -114,7 +114,7 @@ handleEvent (VtyEvent (Vty.EvKey Vty.KEnter [])) = do
   let newGame = case T.length input of
                   2 -> pawnMove game input
                   3 -> handleThreeLengthMove game input  -- Implement this function as per your game logic
-                  4 -> captureMove game  -- Implement this function as per your game logic
+                  4 -> handleFourLengthMove game input -- Implement this function as per your game logic
                   _ -> game { inputChars = T.empty }  -- Clear input on invalid move
   put newGame { inputChars = T.empty }  -- Clear inputChars after processing the move
   return ()
