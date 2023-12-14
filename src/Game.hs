@@ -132,3 +132,36 @@ pawnMove game moveText =
   in game { board = newBoard, currentPlayerTurn = opponent (currentPlayerTurn game) }
 
 
+handleThreeLengthMove :: Game -> T.Text -> Game
+handleThreeLengthMove game moveText
+  | T.length moveText == 3 = case T.unpack moveText of
+                               [p, col, row] -> handlePieceMove game p (col, digitToInt row)
+                               _ -> error "Invalid move format"
+  | otherwise = error "Invalid move length"
+  where
+    handlePieceMove :: Game -> Char -> Position -> Game
+    handlePieceMove g p (c, r) =
+      let pieceType = charToPieceType p
+          fromPos = findPiecePosition (board g) pieceType (currentPlayerTurn g)
+          toPos = (c, r)
+          newBoard = updateBoard (board g) fromPos toPos
+      in g { board = newBoard, currentPlayerTurn = opponent (currentPlayerTurn g) }
+
+    charToPieceType :: Char -> PieceType
+    charToPieceType c = case toLower c of
+                          'n' -> Knight
+                          'b' -> Bishop
+                          'r' -> Rook
+                          'q' -> Queen
+                          'k' -> King
+                          _   -> error "Invalid piece type"
+
+-- Function to find the position of a piece on the board
+findPiecePosition :: Chessboard -> PieceType -> Color -> Position
+findPiecePosition board pt color = 
+    case find (\(Square _ mp) -> 
+                case mp of
+                    Just (Piece pt' color') -> pt == pt' && color == color'
+                    Nothing -> False) board of
+        Just (Square pos _) -> pos
+        Nothing -> error "Piece not found"
