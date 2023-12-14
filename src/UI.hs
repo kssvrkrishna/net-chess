@@ -15,37 +15,56 @@ import Brick.Widgets.Border (border, borderWithLabel, hBorderWithLabel, vBorder)
 import Lens.Micro
 import qualified Data.Text as T
 
+-- drawChessboard :: Chessboard -> [Widget ()]
+-- drawChessboard board =
+--   let renderSquare (Square pos piece) =
+--         let (c, i) = pos
+--         in str (" " ++ [c] ++ show i ++ " ")  -- Show the position with proper formatting
+
+--       renderRow :: [Square] -> Widget ()
+--       renderRow row = hBox $ intersperse (str "│") (map renderSquare row)
+
+--       -- Convert each row to a Widget, separating rows by horizontal lines
+--       rearrangedRows = reverse $ chunksOf 8 board  -- Arrange the board into rows and reverse the order
+--       renderedRows = map renderRow rearrangedRows
+--       horizontalLine = hBox (replicate 8 (str "───"))  -- Horizontal line for separation
+
+--   in [vBox (intersperse (str "\n") (renderedRows ++ [horizontalLine]))]  -- Separate rows with newline
+
 drawChessboard :: Chessboard -> [Widget ()]
 drawChessboard board =
-  let renderSquare (Square _ piece) =
+  let renderSquare (Square pos piece) =
         case piece of
           Nothing -> str "   "  -- Empty square, three spaces
           Just (Piece pieceType color) ->
             let pieceSymbol =
                   case (pieceType, color) of
-                    (Pawn, White) -> "♙"
-                    (Rook, White) -> "♖"
-                    (Knight, White) -> "♘"
-                    (Bishop, White) -> "♗"
-                    (Queen, White) -> "♕"
-                    (King, White) -> "♔"
-                    (Pawn, Black) -> "♟"
-                    (Rook, Black) -> "♜"
-                    (Knight, Black) -> "♞"
-                    (Bishop, Black) -> "♝"
-                    (Queen, Black) -> "♛"
-                    (King, Black) -> "♚"
+                    (Pawn, White) -> "♟"
+                    (Rook, White) -> "♜"
+                    (Knight, White) -> "♞"
+                    (Bishop, White) -> "♝"
+                    (Queen, White) -> "♛"
+                    (King, White) -> "♚"
+                    (Pawn, Black) -> "♙"
+                    (Rook, Black) -> "♖"
+                    (Knight, Black) -> "♘"
+                    (Bishop, Black) -> "♗"
+                    (Queen, Black) -> "♕"
+                    (King, Black) -> "♔"
             in str (" " ++ pieceSymbol ++ " ")  -- Padding spaces around the piece
 
       renderRow :: [Square] -> Widget ()
       renderRow row = hBox $ intersperse (str "│") (map renderSquare row)
 
       -- Convert each row to a Widget, separating rows by horizontal lines
-      rearrangedRows = reverse $ chunksOf 8 board  -- Reverse the rows
+      rearrangedRows = reverse $ chunksOf 8 board  -- Arrange the board into rows and reverse the order
       renderedRows = map renderRow rearrangedRows
-      horizontalLine = hBox (replicate 8 (str "───"))  -- Horizontal line for separation
+      horizontalLine = hBox (replicate 8 (str "────"))  -- Horizontal line for separation
 
-  in [vBox (intersperse (str "\n") (horizontalLine : renderedRows))]  -- Separate rows with newline
+      -- Insert horizontal lines between each row
+      boardWithLines = intersperse horizontalLine renderedRows
+
+  in [vBox (boardWithLines)]  -- Assemble the rows with lines into the final widget
 
 drawHelp :: Game -> Widget ()
 drawHelp game =
@@ -64,7 +83,7 @@ drawHelp game =
 drawInputChars :: Game -> Widget ()
 drawInputChars game =
   let input = T.unpack (inputChars game)
-      horizontalLine = hBox (replicate 8 (str "───")) -- Define the horizontal line
+      horizontalLine = hBox (replicate 8 (str "────")) -- Define the horizontal line
       minWidth = 60  -- Set the minimum width
   in vBox [ horizontalLine  -- Add the horizontal line above the widget
           , str ("Input: " ++ input)
@@ -91,27 +110,27 @@ handleEvent :: BrickEvent () e -> EventM () Game ()
 handleEvent (VtyEvent (Vty.EvKey (Vty.KChar 'c') [Vty.MCtrl])) = halt
 handleEvent (VtyEvent (Vty.EvKey Vty.KEnter [])) = do
   input <- gets inputChars
-  if T.length input == 2  -- Check if input is in algebraic notation format
-    then modify $ pawnMove
-  else if T.length input == 3  -- Check if input is in algebraic notation format
-    then modify $ move
-  else if T.length input == 4  -- Check if input is in algebraic notation format
-    then modify $ captureMove
-  else do
-    modify $ \s -> s {previous = previous s, inputChars = T.empty }
-    return ()  -- Invalid input length, do nothing
+  game <- get
+  let newGame = case T.length input of
+                  2 -> pawnMove game input
+                  3 -> move game  -- Implement this function as per your game logic
+                  4 -> captureMove game  -- Implement this function as per your game logic
+                  _ -> game { inputChars = T.empty }  -- Clear input on invalid move
+  put newGame { inputChars = T.empty }  -- Clear inputChars after processing the move
+  return ()
 handleEvent (VtyEvent (Vty.EvKey (Vty.KChar c) [])) = do
-  modify $ \s -> s {previous = previous s, inputChars = T.snoc (inputChars s) c }
+  modify $ \s -> s { inputChars = T.snoc (inputChars s) c }
   return ()
 handleEvent (VtyEvent (Vty.EvKey (Vty.KChar 'd') [Vty.MCtrl])) = do
-  modify $ \s -> s {previous = previous s, inputChars = T.empty }  
+  modify $ \s -> s { inputChars = T.empty }
   return ()
 handleEvent (VtyEvent (Vty.EvKey (Vty.KChar 'b') [Vty.MCtrl])) = do
   maybePrev <- gets previous
   case maybePrev of
-    Just prev -> put prev  -- Set the game state to the previous state if available
+    Just prev -> put prev  -- Revert to previous state if available
     Nothing -> return ()
 handleEvent _ = return ()
+
 
 main :: IO ()
 main = do

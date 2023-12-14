@@ -4,6 +4,17 @@ import Data.List (nub)
 import Data.List.Split (chunksOf)
 import Lens.Micro (ix, (%~))
 import qualified Data.Text as T
+import Data.Char (toLower)
+import qualified Data.Text as T
+import Data.Text.Internal.Read (digitToInt)
+import Data.List (find)
+import System.IO
+import System.IO.Unsafe (unsafePerformIO)
+import Debug.Trace
+
+debugLog :: String -> IO ()
+debugLog msg = withFile "debug.log" AppendMode (\handle -> hPutStrLn handle msg)
+
 
 data CounterState = CounterState { count :: Int, count1 :: Int } deriving (Read, Show)
 data CounterState1 = CounterState1 { count_dec :: Int, count_dec1 :: Int } deriving (Read, Show)
@@ -56,8 +67,8 @@ move game = game
 captureMove :: Game -> Game
 captureMove game = game
 
-pawnMove :: Game -> Game
-pawnMove game = game
+-- pawnMove :: Game -> Game
+-- pawnMove game = game
 
 opponent :: Color -> Color
 opponent White = Black
@@ -80,6 +91,8 @@ initialChessBoard =
   ++
   [ Square (col, 2) (Just (Piece Pawn White)) | col <- ['a'..'h'] ]
   ++
+  [ Square (col, row) Nothing | row <- [3..6],col <- ['a'..'h']]
+  ++
   [ Square (col, 7) (Just (Piece Pawn Black)) | col <- ['a'..'h'] ]
   ++
   [ Square ('a', 8) (Just (Piece Rook   Black))
@@ -91,5 +104,31 @@ initialChessBoard =
   , Square ('g', 8) (Just (Piece Knight Black))
   , Square ('h', 8) (Just (Piece Rook   Black))
   ]
-  ++
-  [ Square (col, row) Nothing | col <- ['a'..'h'], row <- [3..6] ]
+
+textToPosition :: T.Text -> Position
+textToPosition text = 
+  let col = T.head text
+      row = T.unpack text !! 1
+  in (col, read [row])
+
+updateBoard :: Chessboard -> Position -> Position -> Chessboard
+updateBoard board from to =
+  let movePiece square
+        | position square == from = Square from Nothing
+        | position square == to = Square to (findPiece board from)
+        | otherwise = square
+  in map movePiece board
+
+findPiece :: Chessboard -> Position -> Maybe Piece
+findPiece board pos = piece (head (filter (\s -> position s == pos) board))
+
+pawnMove :: Game -> T.Text -> Game
+pawnMove game moveText =
+  let fromPos = case currentPlayerTurn game of
+                  White -> textToPosition (T.snoc (T.take 1 moveText) '2')
+                  Black -> textToPosition (T.snoc (T.take 1 moveText) '7')
+      toPos = textToPosition moveText
+      newBoard = updateBoard (board game) fromPos toPos
+  in game { board = newBoard, currentPlayerTurn = opponent (currentPlayerTurn game) }
+
+
