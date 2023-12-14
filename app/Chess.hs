@@ -30,7 +30,7 @@ initialBoard = [
     (Position 3 1, Piece Bishop White), (Position 4 1, Piece Queen White), 
     (Position 5 1, Piece King White), (Position 6 1, Piece Bishop White), 
     (Position 7 1, Piece Knight White), (Position 8 1, Piece Rook White),
-    (Position 1 2, Piece Pawn White), (Position 2 2, Piece Pawn White), 
+    (Position 1 2, Piece Pawn White), (Position 2 2, Piece Pawn White), r
     (Position 3 2, Piece Pawn White), (Position 4 2, Piece Pawn White), 
     (Position 5 2, Piece Pawn White), (Position 6 2, Piece Pawn White), 
     (Position 7 2, Piece Pawn White), (Position 8 2, Piece Pawn White),

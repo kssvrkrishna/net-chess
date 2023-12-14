@@ -56,7 +56,11 @@ library
     import:           warnings
 
     -- Modules exported by the library.
-    exposed-modules:  MyLib
+    exposed-modules:  
+            MyLib,
+            Game,
+            UI
+
 
     -- Modules included in this library but not exported.
     -- other-modules:
@@ -66,7 +70,7 @@ library
 
     -- Other library packages from which modules are imported.
     build-depends:
-        base ^>=4.19.0.0,
+        base ^>=4.17.0.0,
         haskell-say ^>=1.0.0.0,
         brick,
         network,
@@ -99,7 +103,7 @@ executable net-chess
 
     -- Other library packages from which modules are imported.
     build-depends:
-        base ^>=4.19.0.0,
+        base ^>=4.17.0.0,
         net-chess,
         haskell-say ^>=1.0.0.0,
         brick,
@@ -113,7 +117,7 @@ executable net-chess
         text
 
     -- Directories containing source files.
-    hs-source-dirs:   app
+    hs-source-dirs:   src
 
     -- Base language which the package is written in.
     default-language: Haskell2010
@@ -142,7 +146,7 @@ test-suite net-chess-test
 
     -- Test dependencies.
     build-depends:
-        base ^>=4.19.0.0,
+        base ^>=4.17.0.0,
         net-chess,
         haskell-say ^>=1.0.0.0,
         brick,
