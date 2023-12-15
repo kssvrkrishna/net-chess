@@ -20,10 +20,6 @@ import Debug.Trace
 debugLog :: String -> IO ()
 debugLog msg = withFile "debug.log" AppendMode (\handle -> hPutStrLn handle msg)
 
-
-data CounterState = CounterState { count :: Int, count1 :: Int } deriving (Read, Show)
-data CounterState1 = CounterState1 { count_dec :: Int, count_dec1 :: Int } deriving (Read, Show)
-
 data Color = Black | White deriving (Eq, Show, Read)
 type Position = (Char, Int)
 
@@ -41,28 +37,11 @@ data Move = Move {movePiece :: Piece, toPosition :: Position, isCapture :: Bool}
 data Game = Game
   { cursor :: (Int, Int)
   , previous :: Maybe Game
-  , counterState :: CounterState
-  , counterState1 :: CounterState1
   , currentPlayerTurn :: Color
   , board :: Chessboard
   , inputChars :: T.Text
+  , moveHistory :: [T.Text]
   } deriving (Read, Show)
-
-increment :: Game -> Game
-increment game =
-  let updatedCounterState = (counterState game) { count = count (counterState game) + 1
-                                               , count1 = count1 (counterState game) + 1
-                                               }
-      updatedGame = game { counterState = updatedCounterState }
-  in togglePlayerTurn (updatedGame {previous = Just game, inputChars = T.empty })
-
-decrement :: Game -> Game
-decrement game =
-  let updatedCounterState = (counterState game) { count = count (counterState game) - 1
-                                               , count1 = count1 (counterState game) - 1
-                                               }
-      updatedGame = game { counterState = updatedCounterState }
-  in togglePlayerTurn (updatedGame {previous = Just game, inputChars = T.empty })
 
 opponent :: Color -> Color
 opponent White = Black
@@ -70,6 +49,10 @@ opponent Black = White
 
 togglePlayerTurn :: Game -> Game
 togglePlayerTurn game = game { currentPlayerTurn = opponent (currentPlayerTurn game) }
+
+updateGameWithMove :: Game -> T.Text -> Game
+updateGameWithMove game moveText =
+    game { moveHistory =  (moveHistory game) ++ [moveText]  }
 
 initialChessBoard :: Chessboard
 initialChessBoard =

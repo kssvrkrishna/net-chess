@@ -15,22 +15,6 @@ import Brick.Widgets.Border (border, borderWithLabel, hBorderWithLabel, vBorder)
 import Lens.Micro
 import qualified Data.Text as T
 
--- drawChessboard :: Chessboard -> [Widget ()]
--- drawChessboard board =
---   let renderSquare (Square pos piece) =
---         let (c, i) = pos
---         in str (" " ++ [c] ++ show i ++ " ")  -- Show the position with proper formatting
-
---       renderRow :: [Square] -> Widget ()
---       renderRow row = hBox $ intersperse (str "│") (map renderSquare row)
-
---       -- Convert each row to a Widget, separating rows by horizontal lines
---       rearrangedRows = reverse $ chunksOf 8 board  -- Arrange the board into rows and reverse the order
---       renderedRows = map renderRow rearrangedRows
---       horizontalLine = hBox (replicate 8 (str "───"))  -- Horizontal line for separation
-
---   in [vBox (intersperse (str "\n") (renderedRows ++ [horizontalLine]))]  -- Separate rows with newline
-
 drawChessboard :: Chessboard -> [Widget ()]
 drawChessboard board =
   let renderSquare (Square pos piece) =
@@ -69,9 +53,8 @@ drawChessboard board =
 drawHelp :: Game -> Widget ()
 drawHelp game =
   [ "Move: Algebraic notation"
-  , "Counter state: " ++ show (count (counterState game))
   , "Player turn: " ++ show (currentPlayerTurn game)
-  , "Quit: Q key"
+  , "Quit: Ctrl + C"
   ]
   & unlines
   & str
@@ -89,17 +72,31 @@ drawInputChars game =
           , str ("Input: " ++ input)
             & padLeftRight 5
             & hLimit minWidth
-            & borderWithLabel (str " Current Input ")
+            & borderWithLabel (str " Enter your move ")
             & withBorderStyle unicodeBold
           ]
 
+drawMoveHistory :: [T.Text] -> Widget ()
+drawMoveHistory moves =
+    let (whiteMoves, blackMoves) = splitMoves moves
+        whiteColumn = vBox $ map str $ "White" : whiteMoves
+        blackColumn = vBox $ map str $ "Black" : blackMoves
+    in hBox [whiteColumn <+> vBorder <+> blackColumn]
+
+splitMoves :: [T.Text] -> ([String], [String])
+splitMoves moves =
+    let indexedMoves = zip [1..] moves
+        whiteMoves = [T.unpack m | (i, m) <- indexedMoves, odd i]
+        blackMoves = [T.unpack m | (i, m) <- indexedMoves, even i]
+    in (whiteMoves, blackMoves)
+
 drawUI :: Game -> Widget ()
 drawUI game =
-  vBox [drawHelp (game), vBox (drawChessboard (board game)), drawInputChars game]
+  vBox [drawHelp (game), vBox (drawChessboard (board game)),drawInputChars game, drawMoveHistory (moveHistory game)]
 
 app :: App Game () ()
 app = App
-  { appDraw = \s -> [drawUI s] -- drawChessboard (board s)
+  { appDraw = \s -> [drawUI s]
   , appChooseCursor = neverShowCursor
   , appHandleEvent = handleEvent
   , appStartEvent = return ()
@@ -113,10 +110,11 @@ handleEvent (VtyEvent (Vty.EvKey Vty.KEnter [])) = do
   game <- get
   let newGame = case T.length input of
                   2 -> pawnMove game input
-                  3 -> handleThreeLengthMove game input  -- Implement this function as per your game logic
-                  4 -> handleFourLengthMove game input -- Implement this function as per your game logic
-                  _ -> game { inputChars = T.empty }  -- Clear input on invalid move
-  put newGame { inputChars = T.empty }  -- Clear inputChars after processing the move
+                  3 -> handleThreeLengthMove game input  
+                  4 -> handleFourLengthMove game input 
+                  _ -> game { inputChars = T.empty } 
+  let newGame' = updateGameWithMove newGame input                
+  put newGame' { inputChars = T.empty }  
   return ()
 handleEvent (VtyEvent (Vty.EvKey (Vty.KChar c) [])) = do
   modify $ \s -> s { inputChars = T.snoc (inputChars s) c }
@@ -134,6 +132,10 @@ handleEvent _ = return ()
 
 main :: IO ()
 main = do
-  let initialState = Game {previous = Nothing, inputChars = T.empty, board = initialChessBoard, currentPlayerTurn = White, counterState = CounterState { count = 0, count1 = 10 }, counterState1 = CounterState1 { count_dec = 0, count_dec1 = 10 }}
+  let initialState = Game {previous = Nothing, 
+  inputChars = T.empty,
+  board = initialChessBoard, 
+  currentPlayerTurn = White,
+  moveHistory = []}
   _ <- defaultMain app initialState
   return ()
