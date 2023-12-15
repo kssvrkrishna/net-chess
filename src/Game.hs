@@ -23,7 +23,7 @@ debugLog msg = withFile "debug.log" AppendMode (\handle -> hPutStrLn handle msg)
 data Color = Black | White deriving (Eq, Show, Read)
 type Position = (Char, Int)
 
-data Square = Square {position :: Position, piece :: Maybe Piece } deriving (Show, Read)
+data Square = Square {position :: Position, piece :: Maybe Piece } deriving (Eq, Show, Read)
 type Chessboard = [Square]
 
 data PieceType = King | Queen | Rook | Knight | Bishop | Pawn deriving (Eq, Show, Read)
