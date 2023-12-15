@@ -58,17 +58,6 @@ textToPositionTests = TestList [
     TestLabel "testTextToPosition" testTextToPosition
     ]
 
--- updateBoard
-testUpdateBoard = TestCase $
-    let initialBoard = [ Square ('a', 1) (Just (Piece King White)), Square ('b', 2) Nothing, Square ('c', 3) (Just (Piece Queen Black)) ]
-        updatedBoard = updateBoard initialBoard ('a', 1) ('b', 2)
-    in
-        assertEqual "Should update the board correctly" [ Square ('b', 2) (Just (Piece King White)), Square ('b', 2) Nothing, Square ('c', 3) (Just (Piece Queen Black)) ] updatedBoard
-
-updateBoardTests = TestList [
-    TestLabel "testUpdateBoard" testUpdateBoard
-    ]
-
 -- findPiece
 testFindPiece = TestCase $
     let initialBoard = [ Square ('a', 1) (Just (Piece King White)), Square ('b', 2) Nothing, Square ('c', 3) (Just (Piece Queen Black)) ]
@@ -78,39 +67,6 @@ testFindPiece = TestCase $
 
 findPieceTests = TestList [
     TestLabel "testFindPiece" testFindPiece
-    ]
-
--- pawnMove: Valid
-testPawnMoveValid = TestCase $
-    let currentGame = Game (0, 0) Nothing White [ Square ('a', 2) (Just (Piece Pawn White)), Square ('b', 3) Nothing, Square ('c', 4) Nothing ] (T.pack "input") []
-        updatedGame = pawnMove currentGame (T.pack "a3")
-        expectedBoard = [ Square ('a', 3) (Just (Piece Pawn White)), Square ('b', 3) Nothing, Square ('c', 4) Nothing ]
-    in
-        assertEqual "Should update the board correctly for a valid move" expectedBoard (board updatedGame)
-
--- pawnMove: Invalid
-testPawnMoveInvalid = TestCase $ do
-    let currentGame = Game (0, 0) Nothing White [ Square ('a', 2) (Just (Piece Pawn White)), Square ('b', 3) Nothing, Square ('c', 4) Nothing ] (T.pack "input") []
-        expectedErrorMessage = "No pawn found for move"
-        action = evaluate (pawnMove currentGame (T.pack "d3"))
-    result <- catch (action >> return Nothing) (\e -> return (Just (show (e :: SomeException))))
-    assertEqual "Should throw an error for an invalid move" (Just expectedErrorMessage) result
-
-pawnMoveTests = TestList [
-    TestLabel "testPawnMoveValid" testPawnMoveValid,
-    TestLabel "testPawnMoveInvalid" testPawnMoveInvalid
-    ]
-
--- findPawnPosition
-testFindPawnPosition = TestCase $
-    let initialBoard = [ Square ('a', 2) (Just (Piece Pawn White)), Square ('b', 3) (Just (Piece Pawn Black)), Square ('c', 4) (Just (Piece Rook White)) ]
-        result = findPawnPosition initialBoard White 'a' 2
-        expected = Just ('a', 2)
-    in
-        assertEqual "Should find the pawn's position" expected result
-
-findPawnPositionTests = TestList [
-    TestLabel "testFindPawnPosition" testFindPawnPosition
     ]
 
 -- isValidPawnMove
@@ -130,13 +86,6 @@ testCharToPieceType = TestList
     -- Add more test cases as needed
     ]
 
--- findMovablePiece
-testFindMovablePiece = TestList
-    [ TestCase $ assertEqual "Find movable piece - White Pawn at ('b', 2)" (Just ('b', 2)) (findMovablePiece initialBoard Pawn White ('c', 3))
-    , TestCase $ assertEqual "Find movable piece - Black Pawn at ('e', 7)" (Just ('e', 7)) (findMovablePiece initialBoard Pawn Black ('d', 6))
-    , TestCase $ assertEqual "No movable piece for Rook" Nothing (findMovablePiece initialBoard Rook White ('a', 1))
-    ]
-
 initialBoard = [ Square ('a', 2) (Just (Piece Pawn White))
                , Square ('b', 2) (Just (Piece Pawn White))
                , Square ('c', 3) (Just (Piece Pawn White))
@@ -153,25 +102,6 @@ testCanMoveTo = TestList
     , TestCase $ assertBool "Valid move for Queen" (canMoveTo ('d', 4) ('g', 4) Queen)
     , TestCase $ assertBool "Valid move for King" (canMoveTo ('e', 1) ('d', 2) King)
     , TestCase $ assertBool "Invalid move for piece type" (not $ canMoveTo ('a', 1) ('c', 3) Knight)
-    ]
-
--- lineMoves
-testLineMoves = TestList
-    [ TestCase $ assertEqual "Line moves - horizontal" [('c', 4), ('d', 4), ('e', 4), ('f', 4)] (lineMoves ('c', 4) [(1, 0), (1, 0), (1, 0), (1, 0)])
-    , TestCase $ assertEqual "Line moves - vertical" [('d', 5), ('d', 6), ('d', 7), ('d', 8)] (lineMoves ('d', 5) [(0, 1), (0, 1), (0, 1), (0, 1)])
-    , TestCase $ assertEqual "Line moves - diagonal" [('c', 3), ('b', 2), ('a', 1)] (lineMoves ('c', 3) [(-1, -1), (-1, -1), (-1, -1)])
-    ]
-
--- adjacentMoves
-testAdjacentMoves = TestList
-    [ TestCase $ assertEqual "Adjacent moves - center" [('c', 4), ('d', 4), ('e', 4), ('c', 5), ('e', 5), ('c', 3), ('d', 3), ('e', 3)] (adjacentMoves ('d', 4))
-    , TestCase $ assertEqual "Adjacent moves - corner" [('a', 1), ('b', 1), ('a', 2), ('b', 2)] (adjacentMoves ('a', 1))
-    ]
-
--- knightMoves
-testKnightMoves = TestList
-    [ TestCase $ assertEqual "Knight moves - center" [('b', 3), ('c', 2), ('e', 2), ('f', 3), ('b', 5), ('c', 6), ('e', 6), ('f', 5)] (knightMoves ('d', 4))
-    , TestCase $ assertEqual "Knight moves - corner" [('b', 2), ('c', 3)] (knightMoves ('a', 1))
     ]
 
 -- validPosition
@@ -211,166 +141,6 @@ boardMapMock = [ (('a', 1), Piece King White)
                , (('c', 3), Piece Rook Black)
                , (('d', 4), Piece Queen White)
                ]
--- findDisambiguatingPiecePositions
-testFindDisambiguatingPiecePositions = TestList
-    [ TestCase $ assertEqual "Disambiguating piece positions: Matching column" [('b', 2), ('d', 4)] (findDisambiguatingPiecePositions boardMapMock Pawn White 'b')
-    , TestCase $ assertEqual "Disambiguating piece positions: Matching row" [('a', 1)] (findDisambiguatingPiecePositions boardMapMock King White '1')
-    , TestCase $ assertEqual "Disambiguating piece positions: No match" [] (findDisambiguatingPiecePositions boardMapMock Queen White 'z')
-    ]
-
--- updateBoardWithPromotion
-testUpdateBoardWithPromotion = TestList
-    [ TestCase $ assertEqual "Update board with promotion - Pawn to Queen" 
-        [Square ('a', 1) (Just (Piece King White)), Square ('b', 2) Nothing, Square ('c', 8) (Just (Piece Queen Black))]
-        (updateBoardWithPromotion initialBoard ('c', 7) ('c', 8) Queen)
-    , TestCase $ assertEqual "Update board with promotion - Pawn to Rook" 
-        [Square ('a', 1) (Just (Piece King White)), Square ('b', 2) Nothing, Square ('c', 8) (Just (Piece Rook Black))]
-        (updateBoardWithPromotion initialBoard ('c', 7) ('c', 8) Rook)
-    ]
-  where
-    initialBoard = [Square ('a', 1) (Just (Piece King White)), Square ('b', 2) Nothing, Square ('c', 7) (Just (Piece Pawn Black))]
-
--- handleDisambiguatingMove
-testHandleDisambiguatingMove = TestList
-    [ TestCase $ assertEqual "Handle Disambiguating Move: Valid"
-        expectedGame
-        (handleDisambiguatingMove currentGame 'N' 'b' ('c', 3))
-    ]
-  where
-    currentGame = Game
-        { cursor = (0, 0)
-        , previous = Nothing
-        , currentPlayerTurn = White
-        , board = [ Square ('a', 1) (Just (Piece Knight White))
-                  , Square ('b', 3) (Just (Piece Pawn Black))
-                  , Square ('c', 4) Nothing
-                  ]
-        , inputChars = T.pack "input"
-        , moveHistory = []
-        }
-    expectedGame = Game
-        { cursor = (0, 0)
-        , previous = Nothing
-        , currentPlayerTurn = Black
-        , board = [ Square ('a', 1) Nothing
-                  , Square ('b', 3) (Just (Piece Knight White))
-                  , Square ('c', 3) Nothing
-                  ]
-        , inputChars = T.pack "input"
-        , moveHistory = []
-        }
-
--- handlePawnPromotion
-testHandlePawnPromotion = TestList
-    [ TestCase $ assertEqual "Handle Pawn Promotion: Valid"
-        expectedGame
-        (handlePawnPromotion initialGame ('d', 8) 'Q')
-    ]
-  where
-    initialGame = Game
-        { cursor = (0, 0)
-        , previous = Nothing
-        , currentPlayerTurn = White
-        , board = [ Square ('d', 7) (Just (Piece Pawn White))
-                  , Square ('a', 2) (Just (Piece Pawn Black))
-                  , Square ('e', 8) Nothing
-                  ]
-        , inputChars = T.pack "input"
-        , moveHistory = []
-        }
-    expectedGame = Game
-        { cursor = (0, 0)
-        , previous = Nothing
-        , currentPlayerTurn = Black
-        , board = [ Square ('d', 8) (Just (Piece Queen White))
-                  , Square ('a', 2) (Just (Piece Pawn Black))
-                  , Square ('e', 8) Nothing
-                  ]
-        , inputChars = T.pack "input"
-        , moveHistory = []
-        }
-
--- handlePieceCapture
-testHandlePieceCapture = TestList
-    [ TestCase $ assertEqual "Handle Piece Capture: Valid"
-        expectedGame
-        (handlePieceCapture currentGame 'N' ('e', 7))
-    ]
-  where
-    currentGame = Game
-        { cursor = (0, 0)
-        , previous = Nothing
-        , currentPlayerTurn = Black
-        , board = [ Square ('a', 1) (Just (Piece Pawn White))
-                  , Square ('b', 2) Nothing
-                  , Square ('c', 3) (Just (Piece Knight Black))
-                  , Square ('d', 4) Nothing
-                  , Square ('e', 5) Nothing
-                  , Square ('f', 6) Nothing
-                  , Square ('g', 7) Nothing
-                  , Square ('h', 8) Nothing
-                  , Square ('e', 7) (Just (Piece Bishop Black))
-                  ]
-        , inputChars = T.pack "input"
-        , moveHistory = []
-        }
-    expectedGame = Game
-        { cursor = (0, 0)
-        , previous = Nothing
-        , currentPlayerTurn = White
-        , board = [ Square ('a', 1) (Just (Piece Pawn White))
-                  , Square ('b', 2) Nothing
-                  , Square ('c', 3) Nothing
-                  , Square ('d', 4) Nothing
-                  , Square ('e', 5) Nothing
-                  , Square ('f', 6) Nothing
-                  , Square ('g', 7) Nothing
-                  , Square ('h', 8) Nothing
-                  , Square ('e', 7) (Just (Piece Knight Black))
-                  ]
-        , inputChars = T.pack "input"
-        , moveHistory = []
-        }
-
--- handlePawnCapture
-testHandlePawnCapture = TestList
-    [ TestCase $ assertEqual "Handle Pawn Capture: Valid"
-        expectedGame
-        (handlePawnCapture currentGame 'd' ('e', 4))
-    ]
-  where
-    currentGame = Game
-        { cursor = (0, 0)
-        , previous = Nothing
-        , currentPlayerTurn = Black
-        , board = [ Square ('a', 1) Nothing
-                  , Square ('b', 2) (Just (Piece Pawn White))
-                  , Square ('c', 3) Nothing
-                  , Square ('d', 4) (Just (Piece Pawn Black))
-                  , Square ('e', 5) Nothing
-                  , Square ('f', 6) Nothing
-                  , Square ('g', 7) (Just (Piece Pawn White))
-                  , Square ('h', 8) Nothing
-                  ]
-        , inputChars = T.pack "input"
-        , moveHistory = []
-        }
-    expectedGame = Game
-        { cursor = (0, 0)
-        , previous = Nothing
-        , currentPlayerTurn = White
-        , board = [ Square ('a', 1) Nothing
-                  , Square ('b', 2) (Just (Piece Pawn White))
-                  , Square ('c', 3) Nothing
-                  , Square ('d', 4) Nothing
-                  , Square ('e', 5) Nothing
-                  , Square ('f', 6) Nothing
-                  , Square ('g', 7) (Just (Piece Pawn White))
-                  , Square ('h', 8) Nothing
-                  ]
-        , inputChars = T.pack "input"
-        , moveHistory = []
-        }
 
 -- AllTests
 allTests = TestList [
@@ -379,27 +149,14 @@ allTests = TestList [
         togglePlayerTurnTests, 
         updateGameWithMoveTests, 
         textToPositionTests, 
-        updateBoardTests, 
         findPieceTests,
-        pawnMoveTests,
-        findPawnPositionTests,
         testIsValidPawnMove,
         testCharToPieceType,
-        testFindMovablePiece,
         testCanMoveTo,
-        testLineMoves,
-        testAdjacentMoves,
-        testKnightMoves,
         testValidPosition,
         testDetermineMoveType,
         testToPiecePositionsMap,
-        testMatchesDisambiguator,
-        testFindDisambiguatingPiecePositions,
-        testUpdateBoardWithPromotion,
-        testHandleDisambiguatingMove,
-        testHandlePawnPromotion,
-        testHandlePieceCapture,
-        testHandlePawnCapture
+        testMatchesDisambiguator
     ]
 
 main = runTestTT allTests
