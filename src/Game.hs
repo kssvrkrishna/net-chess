@@ -30,14 +30,12 @@ type Position = (Char, Int)
 data Square = Square {position :: Position, piece :: Maybe Piece } deriving (Show, Read)
 type Chessboard = [Square]
 
--- K for king, Q for queen, R for rook, B for bishop, and N for knight
 data PieceType = King | Queen | Rook | Knight | Bishop | Pawn deriving (Eq, Show, Read)
 data Piece = Piece PieceType Color deriving (Eq, Show, Read)
 
 getColor :: Piece -> Color
 getColor (Piece _ color) = color
 
--- Defined this way to comply with the algebraic notation of chess moves.
 data Move = Move {movePiece :: Piece, toPosition :: Position, isCapture :: Bool} deriving (Eq, Show) 
 
 data Game = Game
@@ -65,15 +63,6 @@ decrement game =
                                                }
       updatedGame = game { counterState = updatedCounterState }
   in togglePlayerTurn (updatedGame {previous = Just game, inputChars = T.empty })
-
-move :: Game -> Game
-move game = game
-
-captureMove :: Game -> Game
-captureMove game = game
-
--- pawnMove :: Game -> Game
--- pawnMove game = game
 
 opponent :: Color -> Color
 opponent White = Black
@@ -181,7 +170,6 @@ charToPieceType c = case toLower c of
                         'k' -> King
                         _   -> error "Invalid piece type"
 
--- Movement logic for different pieces
 findMovablePiece :: Chessboard -> PieceType -> Color -> Position -> Maybe Position
 findMovablePiece board pieceType color targetPos =
     let possiblePieces = filter isCorrectPiece board
@@ -280,7 +268,7 @@ handlePawnPromotion game (col, row) newPiece =
 handleDisambiguatingMove :: Game -> Char -> Char -> Position -> Game
 handleDisambiguatingMove game piece disambiguator (col, row) =
     let pieceType = charToPieceType piece
-        boardMap = toPiecePositionsMap (board game) -- Convert your board to a map if not already
+        boardMap = toPiecePositionsMap (board game)
         possibleFromPositions = findDisambiguatingPiecePositions boardMap pieceType (currentPlayerTurn game) disambiguator
         validFromPos = find (\pos -> canMoveTo pos (col, row) pieceType) possibleFromPositions
     in case validFromPos of
