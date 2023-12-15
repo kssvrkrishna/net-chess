@@ -17,6 +17,7 @@ import System.IO
 import System.IO.Unsafe (unsafePerformIO)
 import Debug.Trace
 
+-- Use this for logging
 debugLog :: String -> IO ()
 debugLog msg = withFile "debug.log" AppendMode (\handle -> hPutStrLn handle msg)
 
@@ -32,7 +33,7 @@ data Piece = Piece PieceType Color deriving (Eq, Show, Read)
 getColor :: Piece -> Color
 getColor (Piece _ color) = color
 
-data Move = Move {movePiece :: Piece, toPosition :: Position, isCapture :: Bool} deriving (Eq, Show) 
+data Move = Move {movePiece :: Piece, toPosition :: Position, isCapture :: Bool} deriving (Eq, Show)
 
 data Game = Game
   { cursor :: (Int, Int)
@@ -41,6 +42,7 @@ data Game = Game
   , board :: Chessboard
   , inputChars :: T.Text
   , moveHistory :: [T.Text]
+  , capturedPieces :: [(PieceType, Color)]
   } deriving (Eq, Read, Show)
 
 opponent :: Color -> Color
@@ -82,12 +84,14 @@ initialChessBoard =
   , Square ('h', 8) (Just (Piece Rook   Black))
   ]
 
+-- get posiiton from text. 
 textToPosition :: T.Text -> Position
-textToPosition text = 
+textToPosition text =
   let col = T.head text
       row = T.unpack text !! 1
   in (col, read [row])
 
+-- Update the board 
 updateBoard :: Chessboard -> Position -> Position -> Chessboard
 updateBoard board from to =
   let movePiece square
@@ -96,42 +100,43 @@ updateBoard board from to =
         | otherwise = square
   in map movePiece board
 
+-- get the piece present in position
 findPiece :: Chessboard -> Position -> Maybe Piece
 findPiece board pos = piece (head (filter (\s -> position s == pos) board))
 
+-- All moves of length 2 are pawn moves.
 pawnMove :: Game -> T.Text -> Game
 pawnMove game moveText =
   let toPos@(col, row) = textToPosition moveText
       maybeFromPos = findPawnPosition (board game) (currentPlayerTurn game) col row
   in case maybeFromPos of
-       Just fromPos -> 
+       Just fromPos ->
            let newBoard = updateBoard (board game) fromPos toPos
-           in game { board = newBoard, currentPlayerTurn = opponent (currentPlayerTurn game) }
-       Nothing -> error "No pawn found for move"
+           in game { board = newBoard, currentPlayerTurn = opponent (currentPlayerTurn game)}
+       Nothing -> error "No pawn found for move" -- TODO: This is quitting the game. 
 
-
+-- Get the pawn position 
 findPawnPosition :: Chessboard -> Color -> Char -> Int -> Maybe Position
 findPawnPosition board color col targetRow =
     let pawns = filter isPawnOnColumn board
         isPawnOnColumn (Square (c, r) (Just (Piece Pawn colr))) = c == col && colr == color && isValidPawnMove r targetRow color
         isPawnOnColumn _ = False
         validPawns = filter (\(Square pos _) -> isValidPawnMove (snd pos) targetRow color) pawns
-    in fmap position $ listToMaybe validPawns
+    in fmap position $ listToMaybe validPawns -- Getting the first pawn. -- TODO: Might cause an issue. 
 
+-- check validity for pawn move
 isValidPawnMove :: Int -> Int -> Color -> Bool
 isValidPawnMove currentRow targetRow color =
     let rowDiff = targetRow - currentRow
     in if color == White
-       then (rowDiff == 1 || (currentRow == 2 && rowDiff == 2))
-       else (rowDiff == -1 || (currentRow == 7 && rowDiff == -2))
+       then rowDiff == 1 || (currentRow == 2 && rowDiff == 2)
+       else rowDiff == -1 || (currentRow == 7 && rowDiff == -2)
 
--- TODO: Write test!
+-- Handle moves of length three. Call the function only with length 3.
 handleThreeLengthMove :: Game -> T.Text -> Game
 handleThreeLengthMove game moveText
-  | T.length moveText == 3 = case T.unpack moveText of
-                               [p, col, row] -> handlePieceMove game p (col, digitToInt row)
-                               _ -> error "Invalid move format"
-  | otherwise = error "Invalid move length"
+   = let [p, col, row] = T.unpack moveText
+     in handlePieceMove game p (col, digitToInt row)
   where
     handlePieceMove :: Game -> Char -> Position -> Game
     handlePieceMove g p (c, r) =
@@ -144,6 +149,7 @@ handleThreeLengthMove game moveText
              in g { board = newBoard, currentPlayerTurn = opponent (currentPlayerTurn g) }
            Nothing -> error "No movable piece found"
 
+-- Get piece type from charcter
 charToPieceType :: Char -> PieceType
 charToPieceType c = case toLower c of
                         'n' -> Knight
@@ -153,13 +159,14 @@ charToPieceType c = case toLower c of
                         'k' -> King
                         _   -> error "Invalid piece type"
 
+-- Get list of all possible movable pieces from 
 findMovablePiece :: Chessboard -> PieceType -> Color -> Position -> Maybe Position
 findMovablePiece board pieceType color targetPos =
     let possiblePieces = filter isCorrectPiece board
         isCorrectPiece (Square pos (Just (Piece pt c))) = pt == pieceType && c == color && canMoveTo pos targetPos pt
         isCorrectPiece _ = False
     in case possiblePieces of
-         (Square pos _):_ -> Just pos
+         (Square pos _):_ -> Just pos -- returning only first possible piece. If multiple are available, then invalid move.
          _                -> Nothing
 
 canMoveTo :: Position -> Position -> PieceType -> Bool
@@ -177,12 +184,12 @@ lineMoves (col, row) directions = concatMap (lineMove (col, row)) directions
     lineMove start@(c, r) (dc, dr) = takeWhile validPosition $ tail $ iterate (\(c, r) -> (chr (ord c + dc), r + dr)) start
 
 adjacentMoves :: Position -> [Position]
-adjacentMoves (col, row) = filter validPosition 
+adjacentMoves (col, row) = filter validPosition
     [(chr (ord col + dc), row + dr) | dc <- [-1, 0, 1], dr <- [-1, 0, 1], (dc, dr) /= (0, 0)]
 
 
 knightMoves :: Position -> [Position]
-knightMoves (col, row) = filter validPosition 
+knightMoves (col, row) = filter validPosition
     [(chr (ord col + dx), row + dy) | dx <- [-2, -1, 1, 2], dy <- [-2, -1, 1, 2], abs dx /= abs dy]
 
 
@@ -199,27 +206,26 @@ determineMoveType moveText
   | T.any (== '=') moveText = PawnPromotion
   | otherwise = DisambiguatingMove
 
--- TODO: Write test!
+-- TODO: Some invalid moves are going through
 handleFourLengthMove :: Game -> T.Text -> Game
-handleFourLengthMove game moveText = 
+handleFourLengthMove game moveText =
     case determineMoveType moveText of
-        PawnCapture -> 
+        PawnCapture ->
             let [colFrom, 'x', colTo, rowTo] = T.unpack moveText
             in handlePawnCapture game colFrom (colTo, digitToInt rowTo)
 
-        PieceCapture -> 
+        PieceCapture ->
             let [piece, 'x', col, row] = T.unpack moveText
             in handlePieceCapture game piece (col, digitToInt row)
 
-        PawnPromotion -> 
+        PawnPromotion ->
             let [col, row, '=', newPiece] = T.unpack moveText
             in handlePawnPromotion game (col, digitToInt row) newPiece
 
-        DisambiguatingMove -> 
+        DisambiguatingMove ->
             let [piece, disambiguator, col, row] = T.unpack moveText
             in handleDisambiguatingMove game piece disambiguator (col, digitToInt row)
 
--- TODO: Write test for invalid move!
 handlePawnCapture :: Game -> Char -> Position -> Game
 handlePawnCapture game colFrom (colTo, rowTo) =
     let fromPos = (colFrom, if currentPlayerTurn game == White then rowTo - 1 else rowTo + 1)
@@ -227,18 +233,16 @@ handlePawnCapture game colFrom (colTo, rowTo) =
         newBoard = updateBoard (board game) fromPos toPos
     in game { board = newBoard, currentPlayerTurn = opponent (currentPlayerTurn game) }
 
--- TODO: Write test for invalid move!
 handlePieceCapture :: Game -> Char -> Position -> Game
 handlePieceCapture game piece (col, row) =
     let pieceType = charToPieceType piece
         maybeFromPos = findMovablePiece (board game) pieceType (currentPlayerTurn game) (col, row)
     in case maybeFromPos of
-        Just fromPos -> 
+        Just fromPos ->
             let newBoard = updateBoard (board game) fromPos (col, row)
             in game { board = newBoard, currentPlayerTurn = opponent (currentPlayerTurn game) }
-        Nothing -> error "No piece found for capture"
+        Nothing -> error "No piece found for capture" -- TODO: Fix this. 
 
--- TODO: Write test for invalid move!
 handlePawnPromotion :: Game -> Position -> Char -> Game
 handlePawnPromotion game (col, row) newPiece =
     let promotionRow = if currentPlayerTurn game == White then 8 else 1
@@ -248,9 +252,8 @@ handlePawnPromotion game (col, row) newPiece =
         newBoard = updateBoardWithPromotion (board game) fromPos toPos promotedPieceType
     in if row == promotionRow
        then game { board = newBoard, currentPlayerTurn = opponent (currentPlayerTurn game) }
-       else error "Invalid promotion move"
+       else error "Invalid promotion move" -- TODO: Fix this
 
--- TODO: Write test for invalid move!
 handleDisambiguatingMove :: Game -> Char -> Char -> Position -> Game
 handleDisambiguatingMove game piece disambiguator (col, row) =
     let pieceType = charToPieceType piece
@@ -261,7 +264,7 @@ handleDisambiguatingMove game piece disambiguator (col, row) =
         Just fromPos ->
             let newBoard = updateBoard (board game) fromPos (col, row)
             in game { board = newBoard, currentPlayerTurn = opponent (currentPlayerTurn game) }
-        Nothing -> error "No piece found for disambiguating move"
+        Nothing -> error "No piece found for disambiguating move" -- TODO: Fix this
 
 updateBoardWithPromotion :: Chessboard -> Position -> Position -> PieceType -> Chessboard
 updateBoardWithPromotion board from to promotedPieceType =
@@ -269,15 +272,15 @@ updateBoardWithPromotion board from to promotedPieceType =
         | position square == from = Square from Nothing
         | position square == to   = Square to (Just (Piece promotedPieceType (getColorFromSquare square)))
         | otherwise               = square
-      getColorFromSquare square = 
+      getColorFromSquare square =
         case piece square of
           Just (Piece _ color) -> color
-          Nothing -> error "Invalid board state"
+          Nothing -> error "Invalid board state" -- TODO: Fix this
   in map movePiece board
 
 type PiecePositionsMap = [(Position, Piece)]
 toPiecePositionsMap :: Chessboard -> PiecePositionsMap
-toPiecePositionsMap board = 
+toPiecePositionsMap board =
   [(position square, piece) | square <- board, Just piece <- [piece square]]
 
 findDisambiguatingPiecePositions :: PiecePositionsMap -> PieceType -> Color -> Char -> [Position]

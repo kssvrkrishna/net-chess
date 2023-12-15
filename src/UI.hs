@@ -15,6 +15,7 @@ import Brick.Widgets.Border (border, borderWithLabel, hBorderWithLabel, vBorder)
 import Lens.Micro
 import qualified Data.Text as T
 
+-- a4,a5,b3,b5,c3,bxa4,bxa4, ba6, qb3, Bxe2, Bxe2, Nc6, Nf3, Nf6, Nd4, Nxd4, cxd4
 drawChessboard :: Chessboard -> [Widget ()]
 drawChessboard board =
   let renderSquare (Square pos piece) =
@@ -136,6 +137,7 @@ main = do
   inputChars = T.empty,
   board = initialChessBoard, 
   currentPlayerTurn = White,
-  moveHistory = []}
+  moveHistory = [],
+  capturedPieces =[]}
   _ <- defaultMain app initialState
   return ()
