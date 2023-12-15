@@ -41,7 +41,7 @@ data Game = Game
   , board :: Chessboard
   , inputChars :: T.Text
   , moveHistory :: [T.Text]
-  } deriving (Read, Show)
+  } deriving (Eq, Read, Show)
 
 opponent :: Color -> Color
 opponent White = Black
@@ -125,7 +125,7 @@ isValidPawnMove currentRow targetRow color =
        then (rowDiff == 1 || (currentRow == 2 && rowDiff == 2))
        else (rowDiff == -1 || (currentRow == 7 && rowDiff == -2))
 
-
+-- TODO: Write test!
 handleThreeLengthMove :: Game -> T.Text -> Game
 handleThreeLengthMove game moveText
   | T.length moveText == 3 = case T.unpack moveText of
@@ -199,7 +199,7 @@ determineMoveType moveText
   | T.any (== '=') moveText = PawnPromotion
   | otherwise = DisambiguatingMove
 
-
+-- TODO: Write test!
 handleFourLengthMove :: Game -> T.Text -> Game
 handleFourLengthMove game moveText = 
     case determineMoveType moveText of
@@ -219,7 +219,7 @@ handleFourLengthMove game moveText =
             let [piece, disambiguator, col, row] = T.unpack moveText
             in handleDisambiguatingMove game piece disambiguator (col, digitToInt row)
 
-
+-- TODO: Write test for invalid move!
 handlePawnCapture :: Game -> Char -> Position -> Game
 handlePawnCapture game colFrom (colTo, rowTo) =
     let fromPos = (colFrom, if currentPlayerTurn game == White then rowTo - 1 else rowTo + 1)
@@ -227,6 +227,7 @@ handlePawnCapture game colFrom (colTo, rowTo) =
         newBoard = updateBoard (board game) fromPos toPos
     in game { board = newBoard, currentPlayerTurn = opponent (currentPlayerTurn game) }
 
+-- TODO: Write test for invalid move!
 handlePieceCapture :: Game -> Char -> Position -> Game
 handlePieceCapture game piece (col, row) =
     let pieceType = charToPieceType piece
@@ -237,6 +238,7 @@ handlePieceCapture game piece (col, row) =
             in game { board = newBoard, currentPlayerTurn = opponent (currentPlayerTurn game) }
         Nothing -> error "No piece found for capture"
 
+-- TODO: Write test for invalid move!
 handlePawnPromotion :: Game -> Position -> Char -> Game
 handlePawnPromotion game (col, row) newPiece =
     let promotionRow = if currentPlayerTurn game == White then 8 else 1
@@ -248,6 +250,7 @@ handlePawnPromotion game (col, row) newPiece =
        then game { board = newBoard, currentPlayerTurn = opponent (currentPlayerTurn game) }
        else error "Invalid promotion move"
 
+-- TODO: Write test for invalid move!
 handleDisambiguatingMove :: Game -> Char -> Char -> Position -> Game
 handleDisambiguatingMove game piece disambiguator (col, row) =
     let pieceType = charToPieceType piece
