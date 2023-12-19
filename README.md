@@ -68,5 +68,11 @@ cabal build
 cabal run net-chess --ghc-options="-threaded"
 ```
 
+## Acknowledgements
 
+### UI.hs
+- We referred https://github.com/evanrelf/sudoku-tui for our drawHelp and handleEvent functions.
 
+### Game.hs
+- We looked at https://hackage.haskell.org/package/chessIO-0.9.3.1/docs/Game-Chess.html which is a Chess library based on the UCI protocol to understand how we can model our Chess components. Our Color, PieceType data types are inspired from it.
+- But the design of our Chessboard, Game datatype and it’s fields are completely different. And consequently so are our chess logic functions.
